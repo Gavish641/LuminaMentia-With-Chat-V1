@@ -207,6 +207,7 @@ class GUI:
         chat_button = Button(main_frame, text="Chat", bd=0, font=("Goudy old style", 15), bg="#6162FF", fg="white", width=15, command=self.chat)
         chat_button.place(relx=0.5, rely=0.6, anchor="center")
 
+
 # --------------------------------------------Score History----------------
     def score_history(self):
         pass
@@ -285,7 +286,7 @@ class GUI:
                 pass
             messagebox.showinfo("Congratulations", "You sorted the numbers correctly! \n Your Grade: " + (str(int(self.client.messages[4]) - int(self.client.messages[3]))))
             self.top_levels["game"].destroy()  # destroy the sorting game frame after clicking ok on the messagebox
-            self.top_levels["game"] = None
+            self.top_levels.pop("game")
             
             # add a function that set the score into the database
             
@@ -295,18 +296,17 @@ class GUI:
             messagebox.showerror("Incorrect Sorting", "Try again! The numbers are not sorted correctly.")
 
 
-    
-
-
 # -------------------------------------------Multi Player Game-------------
     def chat(self):
         self.client.messages = []
         self.client.send_message(["game", "chat", "join", self.client.username])
         while self.client.messages == []:
             pass
+        print(self.client.messages)
         if self.client.messages[2] == "waiting for player":
             self.waiting_for_chat()
         elif self.client.messages[2] == "found":
+            print("TESTTT")
             self.create_chat()
         self.client.messages = []
 
@@ -331,22 +331,37 @@ class GUI:
         title_name = Label(wfc_frame, text="Waiting For Another Player...", font=("Impact", 35, "bold"), fg="black", bg="white")
         title_name.place(relx=0.5, rely=0.5, anchor="center")
 
+        cancel_button = Button(wfc_frame, text="Cancel", bd=0, font=("Goudy old style", 15), bg="#6162FF", fg="white", width=15, command=self.cancel_chat)
+        cancel_button.place(relx=0.5, rely=0.7, anchor="center")
+
 
         wfc_frame.after(1000, self.check_player)
 
+    def cancel_chat(self):
+        self.client.messages = []
+        self.client.send_message(["game", "chat", "cancel", self.client.username])
+        while self.client.messages == []:
+            pass
+        self.top_levels["game"].destroy()
+        self.top_levels.pop("game")
+
     def check_player(self):
-        print(self.client.found_player)
         if self.client.found_player:
             self.create_chat()
-
         else:
             self.top_levels["game"].after(1000, self.check_player)
 
 
     def create_chat(self):
+        if "game" in self.top_levels:
+            self.top_levels["game"].destroy()
+        self.client.found_player = False
+
         chat_frame = Tk()
         text_area = scrolledtext.ScrolledText(chat_frame, wrap=WORD, width=40, height=10)
         text_area.pack()
+
+        self.top_levels["game"] = chat_frame
 
         message_entry = Entry(chat_frame, width=40)
         message_entry.pack()
@@ -381,7 +396,7 @@ class GUI:
         
 
 if __name__ == '__main__':
-    client = MultiThreadedClient('127.0.0.1', 12345)
+    client = MultiThreadedClient('10.100.102.12', 12345)
     client.run()
     app = GUI(client)
     app.run()
