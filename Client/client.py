@@ -51,9 +51,9 @@ class MultiThreadedClient(threading.Thread):
 
                         else:
                             self.messages = msg # ["login/signup", "error"]
-                    print(msg)
                     if msg[0] == "game" and msg[1] == "chat" and msg[2] == "found":
                         self.found_player = True
+                        self.messages = msg
                     else:
                         self.messages = msg
                         self.found_player = False
