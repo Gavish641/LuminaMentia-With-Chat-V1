@@ -70,9 +70,10 @@ class Server:
                         self.messages.append(temp)
                         # print("Client: ", temp)
                         result_msg = self.handle_messages()
+                        print("Server: ", str(result_msg))
                         if (result_msg[0] == "login" or result_msg[0] == "signup") and result_msg[1] == "success":
                             self.clients_names[result_msg[2]] = sock
-                        print(self.clients_names)
+                        
                         # print("Server: ", str(result_msg))
                         result_json_msg = self.message.encode_json(result_msg)
                         sock.send(result_json_msg)
@@ -80,7 +81,6 @@ class Server:
                         for username in self.clients_names:
                             if self.clients_names[username] == sock:
                                 self.clients_names.pop(username)
-                                print("Done ! Boss")
                                 break
                         self.clients.remove(sock)
                         print("Server: Client has been disconnected")
@@ -89,6 +89,7 @@ class Server:
     def handle_messages(self):
         for msg in self.messages:
             if type(msg) is list:
+                print(msg)
                 if msg[0] == "login":
                     if self.database.try_login(msg[1], msg[2]):
                         username = msg[1]
@@ -139,11 +140,17 @@ class Server:
                         if msg[2] == "join":
                             if self.wfc == []:
                                 self.wfc.append(msg[3])
+                                self.messages.remove(msg)
                                 return ["game", "chat", "waiting for player"]
                             else:
                                 self.clients_names[self.wfc[0]].send(self.message.encode_json(["game", "chat", "found"]))
                                 self.wfc = []
-
+                                self.messages.remove(msg)
+                                return ["game", "chat", "found"]
+                        if msg[2] == "cancel":
+                            self.wfc = []
+                            self.messages.remove(msg)
+                            return ["game", "chat", "cancel"]
                     '''
                     if msg[1] == "chat":
                         if msg[2] == "cancel":
@@ -167,7 +174,7 @@ class Server:
 class ChatServer:
     def __init__(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(("127.0.0.1", 5555))
+        self.server_socket.bind(("10.100.102.12", 5555))
         self.server_socket.listen(2)
 
         self.connections = []
@@ -210,5 +217,5 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     # Create and start the server
-    server = Server('127.0.0.1', 12345)
+    server = Server('10.100.102.12', 12345)
     server.start()
